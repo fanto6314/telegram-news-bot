@@ -1,57 +1,67 @@
+from dotenv import load_dotenv
 import telegram.ext
 import requests
+import datetime
+import random
 import json
+import os
 
-with open ('token.txt', 'r') as f:
-    token = f.read()
+load_dotenv()
 
-api = "df6a9ccf303ac1478b7155b55d0c3c33"
+token = os.getenv('TOKEN')
+api = os.getenv('API')
+
 languages = "en"
-limit = "1"
-newsTimer = 10
+newsTimer = 600 #10 minutes
+query = "world"
+pageSize = "100"
+yesterday = str(datetime.datetime.now() - datetime.timedelta(days=1))
+today = str(datetime.datetime.now())
+api_url = "https://newsapi.org/v2/everything?q=" + query + "&from=" + yesterday + "&to=" + today + "&sortBy=popularity&pageSize=+"+ pageSize +"&apiKey=" + api
 
-api_url = "http://api.mediastack.com/v1/news?access_key=" + api + "&languages=" + languages + "&limit=" + limit
-
-#TODO: fix send news every x minutes not working
 def start(update, context):
-    update.message.reply_text('Hello, I am PythonWorldNews_bot!')
-    context.job_queue.run_repeating(news(update, context), interval=newsTimer, first=0)
+    context.job_queue.run_repeating(news, interval=newsTimer, first=1)
 
 def help(update, context):
     update.message.reply_text("""
     Available commands:
     /start - start bot
     /help - help
-    /news - get news
     """)
 
-def news(update, context):
-    limit = 1
+#TODO: Try to get dinamically the chat id, instead of hardcoded
+def news(context):
     response = requests.get(api_url)
     json_data = json.loads(response.text)
-    for i in range(0, limit):
-        #update.message.reply_text(json_data["data"][i]["image"] + json_data["data"][i]["title"])
-        if(json_data["data"][i]["image"]):
-            caption = "<a>" + json_data["data"][i]["title"] + "\n" + json_data["data"][i]["description"] + "\n Author: " + json_data["data"][i]["author"] + "</a>"
-            chat_id = update.message.chat_id
+    i = random.randint(0, 99)
 
-            context.bot.send_photo(
-                chat_id=chat_id,
-                photo=json_data["data"][i]["image"],
-                caption=caption,
-                parse_mode=telegram.ParseMode.HTML
-            )
-        else:
-            caption = "<a>" + json_data["data"][i]["title"] + "\n" + json_data["data"][i]["description"] + "\n Author: " + json_data["data"][i]["author"] + "</a>"
-            chat_id = update.message.chat_id
+    title = json_data['articles'][i]['title']
+    image = json_data['articles'][i]['urlToImage']
+    description = json_data['articles'][i]['description']
+    author = json_data['articles'][i]['author']
+    article = json_data['articles'][i]
 
-            context.bot.send_message(
-                chat_id=chat_id,
-                text=caption,
-                parse_mode=telegram.ParseMode.HTML
-            )
+    if title is None:
+        title = "No title"
+    if image is None:
+        image = "https://www.alfasolare.ru/a_solar_restyle/wp-content/themes/consultix/images/no-image-found-360x260.png"
+    if description is None:
+        description = "No Content"
+    if author is None:
+        author = "No Author"
+    if article is None:
+        i = random.randint(0, len(json_data['articles']))
 
-# -------------------------   Main   ------------------------- #
+    caption = "<a>" + title + "\n" + description + "\n Author: " + author + "</a>"
+    chat_id = "800799169" #My Chat ID
+
+    context.bot.send_photo(
+        chat_id=chat_id,
+        photo=image,
+        caption=caption,
+        parse_mode=telegram.ParseMode.HTML
+    )
+        
 if __name__ == '__main__':
     updater = telegram.ext.Updater(token, use_context=True)
     dispatcher = updater.dispatcher
