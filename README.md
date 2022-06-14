@@ -32,6 +32,16 @@ You can use use this as you wish.
 * [Python](https://python.org/)
 * [Telegram EXT](https://docs.python-telegram-bot.org/en/stable/telegram.ext.html)
 
+### How to run
+
+
+* Go to [newsapi.org](https://newsapi.org/) and get an Api Key.
+* Create a .env file on the same Direcotry as the main.py File containing the following: 
+* * TOKEN=telegram_bot_token
+* * API=newsapi_key
+* Instal any dependancy missing
+* Run the main.py file
+
 ## Contact
 
 anto6314 - antonio.foresta04@gmail.com
